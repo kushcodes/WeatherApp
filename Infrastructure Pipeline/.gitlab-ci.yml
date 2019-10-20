@@ -1,0 +1,21 @@
+image: docker:latest
+
+variables:
+  REGION: us-east-1
+
+services:
+  - docker:dind
+
+before_script:
+  - apk add --no-cache curl jq python py-pip
+  - pip install awscli
+  - $(aws ecr get-login --no-include-email --region us-east-1)
+
+stages:
+  - build
+
+build:
+  stage: build
+  script: 
+    - aws cloudformation deploy --template-file ./public-vpc-weatherapp.yml --stack-name weatherapp --capabilities CAPABILITY_IAM --region us-east-1 --no-fail-on-empty-changeset
+    - aws cloudformation deploy --template-file ./public-service-weatherapp.yml --stack-name weatherappservice --capabilities CAPABILITY_IAM --region us-east-1 --no-fail-on-empty-changeset
